@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kysymyskorttipeli</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #16a34a;
+            --success-hover: #15803d;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+            color: #0f172a;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .file-box {
+            border: 2px dashed var(--border);
+            padding: 25px;
+            text-align: center;
+            border-radius: 8px;
+            background: #f1f5f9;
+            margin-bottom: 20px;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s ease;
+        }
+        .file-box:hover {
+            border-color: var(--primary);
+        }
+
+        .file-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .status-msg {
+            text-align: center;
+            font-weight: 500;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .status-msg.success {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-success:hover { background-color: var(--success-hover); }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+        .btn-secondary { background-color: #64748b; color: white; }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn-category {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 14px 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            color: #334155;
+        }
+        .btn-category:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .question-card {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #0f172a;
+        }
+
+        .answer-box {
+            background: #f0fdf4;
+            border: 1px dashed #bbf7d0;
+            padding: 14px;
+            border-radius: 6px;
+            color: #166534;
+            font-weight: 500;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .answer-box.visible {
+            display: block;
+        }
+
+        .footer-nav {
+            margin-top: 24px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kysymyskorttipeli</h1>
+
+    <!-- 1. ALOITUS- JA LATAUSNÄKYMÄ -->
+    <div id="setup-screen" class="screen active">
+        <div class="file-box">
+            <p id="file-label">Valitse pelitiedosto (.txt) tietokoneeltasi</p>
+            <input type="file" id="file-input" accept=".txt">
+        </div>
+
+        <div id="status-area"></div>
+
+        <button id="start-game-btn" class="btn btn-success" style="display: none;">Aloita peli</button>
+        <button id="clear-data-btn" class="btn btn-danger" style="display: none;">Tyhjennä ladatut tiedot</button>
+    </div>
+
+    <!-- 2. PELINÄKYMÄ -->
+    <div id="game-screen" class="screen">
+        <h3 style="margin-bottom: 12px; font-size: 15px; color: var(--text-light);">Valitse kategoria:</h3>
+        <div id="categories-container" class="category-grid"></div>
+
+        <div id="question-display-area" style="display: none;">
+            <div class="question-card">
+                <div class="card-meta">
+                    <span id="meta-topic">Aihe</span>
+                    <span id="meta-level">Vaikeustaso: -</span>
+                </div>
+                <div id="question-content" class="question-text">Kysymys tulee tähän...</div>
+                <button id="show-answer-btn" class="btn btn-primary">Näytä vastaus</button>
+                <div id="answer-content" class="answer-box">Vastaus tulee tähän.</div>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <button id="back-to-setup-btn" class="btn btn-secondary">Palaa aloitukseen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gameData = {};
+
+    const setupScreen = document.getElementById('setup-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const fileInput = document.getElementById('file-input');
+    const fileLabel = document.getElementById('file-label');
+    const statusArea = document.getElementById('status-area');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const clearDataBtn = document.getElementById('clear-data-btn');
+    const categoriesContainer = document.getElementById('categories-container');
+    const questionDisplayArea = document.getElementById('question-display-area');
+    const metaTopic = document.getElementById('meta-topic');
+    const metaLevel = document.getElementById('meta-level');
+    const questionContent = document.getElementById('question-content');
+    const showAnswerBtn = document.getElementById('show-answer-btn');
+    const answerContent = document.getElementById('answer-content');
+    const backToSetupBtn = document.getElementById('back-to-setup-btn');
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadDataFromStorage();
+        initEventListeners();
+    });
+
+    function initEventListeners() {
+        fileInput.addEventListener('change', handleFileLoad);
+        startGameBtn.addEventListener('click', () => switchScreen('game'));
+        backToSetupBtn.addEventListener('click', () => switchScreen('setup'));
+        clearDataBtn.addEventListener('click', clearAllData);
+        showAnswerBtn.addEventListener('click', () => answerContent.classList.toggle('visible'));
+    }
+
+    function handleFileLoad(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            parseAndSaveText(evt.target.result);
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    function parseAndSaveText(text) {
+        const lines = text.split(/\r?\n/);
+        const parsedData = {};
+        let currentCategory = null;
+        let currentTopic = null;
+        let currentCards = [];
+
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed) return;
+
+            if (trimmed.startsWith('Kategoria:')) {
+                currentCategory = trimmed.replace('Kategoria:', '').trim();
+                if (!parsedData[currentCategory]) {
+                    parsedData[currentCategory] = [];
+                }
+                currentTopic = null;
+            } else if (trimmed.startsWith('Aihe:')) {
+                currentTopic = trimmed.replace('Aihe:', '').trim();
+                let newCard = { topic: currentTopic, questions: {} };
+                parsedData[currentCategory].push(newCard);
+            } else if (currentCategory && parsedData[currentCategory].length > 0) {
+                let match = trimmed.match(/^([1-6])\s*\.?\s*(.+)\?\s*Vastaus:\s*(.+)$/i);
+                if (match) {
+                    let level = parseInt(match[1]);
+                    let question = match[2].trim() + "?";
+                    let answer = match[3].trim();
+                    
+                    let activeCard = parsedData[currentCategory][parsedData[currentCategory].length - 1];
+                    activeCard.questions[level] = { q: question, a: answer };
+                }
+            }
+        });
+
+        if (Object.keys(parsedData).length > 0) {
+            gameData = parsedData;
+            localStorage.setItem('gameQuestionsData', JSON.stringify(gameData));
+            showSuccessStatus();
+        } else {
+            statusArea.innerHTML = '<div class="status-msg btn-danger">Tiedoston lukeminen epäonnistui. Varmista muotoilu!</div>';
+        }
+    }
+
+    function loadDataFromStorage() {
+        const stored = localStorage.getItem('gameQuestionsData');
+        if (stored) {
+            try {
+                gameData = JSON.parse(stored);
+                showSuccessStatus();
+            } catch(e) {
+                localStorage.removeItem('gameQuestionsData');
+            }
+        }
+    }
+
+    function showSuccessStatus() {
+        let count = Object.keys(gameData).length;
+        statusArea.innerHTML = `<div class="status-msg success">Pelitiedosto ladattu muistiin! Löytyi ${count} kategoriaa.</div>`;
+        fileLabel.textContent = "Vaihda pelitiedosto valitsemalla uusi";
+        startGameBtn.style.display = 'block';
+        clearDataBtn.style.display = 'block';
+        buildCategoryButtons();
+    }
+
+    function clearAllData() {
+        localStorage.removeItem('gameQuestionsData');
+        gameData = {};
+        statusArea.innerHTML = '';
+        fileLabel.textContent = "Valitse pelitiedosto (.txt) tietokoneeltasi";
+        fileInput.value = '';
+        startGameBtn.style.display = 'none';
+        clearDataBtn.style.display = 'none';
+        categoriesContainer.innerHTML = '';
+        questionDisplayArea.style.display = 'none';
+    }
+
+    function buildCategoryButtons() {
+        categoriesContainer.innerHTML = '';
+        Object.keys(gameData).forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-category';
+            btn.textContent = cat;
+            btn.addEventListener('click', () => drawQuestionFromCategory(cat));
+            categoriesContainer.appendChild(btn);
+        });
+    }
+
+    function drawQuestionFromCategory(category) {
+        const cards = gameData[category];
+        if (!cards || cards.length === 0) return;
+
+        const randomCard = cards[Math.floor(Math.random() * cards.length)];
+        const availableLevels = Object.keys(randomCard.questions);
+
+        if (availableLevels.length === 0) {
+            alert("Tässä aiheessa ei ole kysymyksiä.");
+            return;
+        }
+
+        const randomLevel = availableLevels[Math.floor(Math.random() * availableLevels.length)];
+        const questionObj = randomCard.questions[randomLevel];
+
+        metaTopic.textContent = randomCard.topic;
+        let difficultyText = randomLevel == 1 ? "1 (Helpoin)" : randomLevel == 6 ? "6 (Vaikein)" : randomLevel;
+        metaLevel.textContent = "Vaikeustaso: " + difficultyText;
+        questionContent.textContent = questionObj.q;
+        answerContent.textContent = questionObj.a;
+
+        answerContent.classList.remove('visible');
+        questionDisplayArea.style.display = 'block';
+    }
+
+    function switchScreen(screenName) {
+        if (screenName === 'game') {
+            setupScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+        } else {
+            gameScreen.classList.remove('active');
+            setupScreen.classList.add('active');
+        }
+    }
+</script>
+</body>
+</html>
